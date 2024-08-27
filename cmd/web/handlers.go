@@ -7,10 +7,17 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
+type playlistReplaceForm struct {
+	Playlist   string `form:"playlist"`
+	FieldError string `form:"-"`
+}
+
 func (app *application) helloWorld(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello world")
+	data := app.newTemplateData(r)
+	app.render(w, r, http.StatusOK, "home.html", data)
 }
 
 func (app *application) login(w http.ResponseWriter, r *http.Request) {
@@ -205,24 +212,43 @@ func (app *application) test(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) replace(w http.ResponseWriter, r *http.Request) {
-	client, err := app.getAuthenticatedClient(r)
+func (app *application) replacePost(w http.ResponseWriter, r *http.Request) {
+
+	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to parse form: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// https://open.spotify.com/playlist/6hJNWlCkgJXPPMPTC0gdI2?si=aa688876890848ba
-	playlistID := "7LQuibg5YN1O6mSi2KuZT8"
+	form := playlistReplaceForm{
+		Playlist:   r.PostForm.Get("playlist"),
+		FieldError: "",
+	}
+
+	// check if valid playlist
+	if !strings.HasPrefix(form.Playlist, "https://open.spotify.com/playlist/") {
+		form.FieldError = "Please enter a valid Spotify playlist link"
+	}
+
+	if form.FieldError != "" {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "home.html", data)
+	}
+
+	playlistID := getPlaylistID(form.Playlist)
+
+	client, err := app.getAuthenticatedClient(r)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
 	err = spotify.UpdatePlaylistItems(client, playlistID)
 	if err != nil {
-		http.Error(w, "Failed to update playlist items: "+err.Error(), http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
-}
-
-func (app *application) bruh(w http.ResponseWriter, r *http.Request) {
-	spotify.Bruh()
 }
