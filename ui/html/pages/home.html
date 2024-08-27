@@ -1,0 +1,15 @@
+{{define "title"}}Home{{end}}
+
+{{define "main"}}
+    <form action="/replace" method="POST">
+        <div>
+            {{with .Form.FieldError}}
+                {{.}}
+            {{end}}
+            <input name="playlist"></input>
+        </div>
+        <div>
+            <input type="submit" value="Submit Playlist">
+        </div>
+    </form>
+{{end}}

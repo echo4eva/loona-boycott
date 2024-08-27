@@ -2,6 +2,7 @@ package main
 
 import (
 	"echo4eva/loona/internal/config"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -17,6 +18,7 @@ type application struct {
 	sessionManager *scs.SessionManager
 	logger         *slog.Logger
 	spotifyClient  *http.Client
+	templateCache  map[string]*template.Template
 }
 
 func main() {
@@ -35,11 +37,19 @@ func main() {
 	// init logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
+	// init template cache
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	app := &application{
 		oAuth:          config.SpotifyOAuthConfig,
 		sessionManager: sessionManager,
 		logger:         logger,
 		spotifyClient:  &http.Client{},
+		templateCache:  templateCache,
 	}
 
 	// init server
@@ -52,7 +62,7 @@ func main() {
 
 	// starts server
 	logger.Info("starting server on port 9001")
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	logger.Error(err.Error())
 	os.Exit(1)
 }

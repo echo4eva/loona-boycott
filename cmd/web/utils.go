@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -10,6 +11,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime/debug"
+	"strings"
 
 	"golang.org/x/oauth2"
 )
@@ -24,6 +27,25 @@ func generateRandomState() string {
 	}
 	// encode slice to base64 string
 	return base64.URLEncoding.EncodeToString(b)
+}
+
+func getPlaylistID(url string) string {
+	// Find the index of "playlist/" in the URL
+	start := strings.Index(url, "playlist/")
+	if start == -1 {
+		return "" // "playlist/" not found in the URL
+	}
+	start += len("playlist/") // Move to the start of the ID
+
+	// Find the index of "?" after "playlist/"
+	end := strings.Index(url[start:], "?")
+	if end == -1 {
+		// If "?" is not found, return the rest of the string
+		return url[start:]
+	}
+
+	// Return the substring between "playlist/" and "?"
+	return url[start : start+end]
 }
 
 func (app *application) getAuthenticatedClient(r *http.Request) (*http.Client, error) {
@@ -54,4 +76,45 @@ func loadJSONtoMap(filename string) (map[string][]string, error) {
 	}
 
 	return results, nil
+}
+
+func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) {
+	var (
+		method = r.Method
+		uri    = r.URL.RequestURI()
+		trace  = string(debug.Stack())
+	)
+
+	app.logger.Error(err.Error(), "method", method, "uri", uri, "trace", trace)
+	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
+
+func (app *application) clientError(w http.ResponseWriter, status int) {
+	http.Error(w, http.StatusText(status), status)
+}
+
+func (app *application) render(w http.ResponseWriter, r *http.Request, status int, page string, data templateData) {
+	ts, ok := app.templateCache[page]
+	if !ok {
+		err := errors.New("the template does not exist")
+		app.serverError(w, r, err)
+		return
+	}
+
+	buf := new(bytes.Buffer)
+
+	err := ts.ExecuteTemplate(buf, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(status)
+	buf.WriteTo(w)
+}
+
+func (app *application) newTemplateData(r *http.Request) templateData {
+	return templateData{
+		Form: r.Form,
+	}
 }

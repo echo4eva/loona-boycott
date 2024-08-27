@@ -1,0 +1,21 @@
+{{define "base"}}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>{{template "title" .}} - boycott</title>
+        <link rel="stylesheet" href="/static/css/style.css">
+    </head>
+    <body>
+        <header>
+            <h1><a href="/">loona boycott</a></h1>
+        </header>
+        {{template "nav" .}}
+        <main>
+            {{template "main" .}}
+        </main>
+        <footer>made by <a href="https:x.com/echo4eva">echo4eva</a></footer>
+        <script src="static/js/main.js" type="text/javascript"></script>
+    </body>
+</html>
+{{end}}
