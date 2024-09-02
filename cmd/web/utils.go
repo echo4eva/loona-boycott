@@ -113,8 +113,19 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	buf.WriteTo(w)
 }
 
+func (app *application) isAuthenticated(r *http.Request) bool {
+	isAuthenticated, exists := r.Context().Value(isAuthenticatedContextKey).(bool)
+	app.logger.Info("isAuthenticated", isAuthenticated, "exists", exists)
+	if !exists {
+		return false
+	}
+
+	return isAuthenticated
+}
+
 func (app *application) newTemplateData(r *http.Request) templateData {
 	return templateData{
-		Form: r.Form,
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated: app.isAuthenticated(r),
 	}
 }

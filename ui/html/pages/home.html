@@ -1,15 +1,26 @@
 {{define "title"}}Home{{end}}
 
 {{define "main"}}
-    <form action="/replace" method="POST">
-        <div>
-            {{with .Form.FieldError}}
-                {{.}}
+    {{if .IsAuthenticated}}
+        <form action="/replace" method="POST">
+            {{with .Flash}}
+            <div>
+                <p>{{.}}</p>
+            </div>
             {{end}}
-            <input name="playlist"></input>
-        </div>
+            <div>
+                {{with .Form.FieldError}}
+                    {{.}}
+                {{end}}
+                <input name="playlist"></input>
+            </div>
+            <div>
+                <input type="submit" value="Submit Playlist">
+            </div>
+        </form>
+    {{else}}
         <div>
-            <input type="submit" value="Submit Playlist">
+            <a href="/auth/login">Login</a>
         </div>
-    </form>
+    {{end}}
 {{end}}

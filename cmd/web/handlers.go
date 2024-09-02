@@ -17,6 +17,7 @@ type playlistReplaceForm struct {
 
 func (app *application) helloWorld(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
+	data.Form = playlistReplaceForm{}
 	app.render(w, r, http.StatusOK, "home.html", data)
 }
 
@@ -249,6 +250,8 @@ func (app *application) replacePost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Playlist updated successfully!")
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
