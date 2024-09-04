@@ -26,7 +26,7 @@ func main() {
 	pool := &redis.Pool{
 		MaxIdle: 10,
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", "localhost:6379")
+			return redis.Dial("tcp", "redis:6379")
 		},
 	}
 
@@ -54,14 +54,14 @@ func main() {
 
 	// init server
 	server := &http.Server{
-		Addr: "localhost:9001",
+		Addr: "0.0.0.0:9001",
 		// first handler == main router
 		Handler:  app.routes(),
 		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 
 	// starts server
-	logger.Info("starting server on port 9001")
+	logger.Info("starting server")
 	err = server.ListenAndServe()
 	logger.Error(err.Error())
 	os.Exit(1)
