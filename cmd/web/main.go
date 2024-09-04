@@ -23,10 +23,11 @@ type application struct {
 
 func main() {
 	// init connection pool to redis
+	redisURL := os.Getenv("REDIS_URL") + ":6379"
 	pool := &redis.Pool{
 		MaxIdle: 10,
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", "redis:6379")
+			return redis.Dial("tcp", redisURL)
 		},
 	}
 
