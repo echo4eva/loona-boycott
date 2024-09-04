@@ -52,9 +52,11 @@ func main() {
 		templateCache:  templateCache,
 	}
 
+	serverPort := os.Getenv("PORT")
 	// init server
 	server := &http.Server{
-		Addr: "0.0.0.0:9001",
+		// Addr: "0.0.0.0:9001",
+		Addr: "0.0.0.0:" + serverPort,
 		// first handler == main router
 		Handler:  app.routes(),
 		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
