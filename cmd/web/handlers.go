@@ -2,6 +2,7 @@ package main
 
 import (
 	"echo4eva/loona/internal/spotify"
+	"echo4eva/loona/internal/youtube"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -267,6 +268,14 @@ func (app *application) youtubeTest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	thing, err := youtube.Test(client)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprint(w, thing)
 }
 
 func (app *application) replacePost(w http.ResponseWriter, r *http.Request) {
