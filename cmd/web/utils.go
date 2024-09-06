@@ -61,6 +61,19 @@ func (app *application) getAuthenticatedClient(r *http.Request) (*http.Client, e
 	return client, nil
 }
 
+func (app *application) getAuthenticatedYoutubeClient(r *http.Request) (*http.Client, error) {
+	tokenInterface := app.sessionManager.Get(r.Context(), "youtube_token")
+	if tokenInterface == nil {
+		return nil, errors.New("no token found for the session")
+	}
+
+	token := tokenInterface.(*oauth2.Token)
+
+	client := app.youtubeOAuth.Client(r.Context(), token)
+
+	return client, nil
+}
+
 func loadJSONtoMap(filename string) (map[string][]string, error) {
 	// Read the file
 	data, err := os.ReadFile(filename)

@@ -15,6 +15,7 @@ import (
 
 type application struct {
 	oAuth          *oauth2.Config
+	youtubeOAuth   *oauth2.Config
 	sessionManager *scs.SessionManager
 	logger         *slog.Logger
 	spotifyClient  *http.Client
@@ -47,6 +48,7 @@ func main() {
 
 	app := &application{
 		oAuth:          config.SpotifyOAuthConfig,
+		youtubeOAuth:   config.YoutubeOAuthConfig,
 		sessionManager: sessionManager,
 		logger:         logger,
 		spotifyClient:  &http.Client{},

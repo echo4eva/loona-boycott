@@ -10,7 +10,9 @@ func (app *application) routes() http.Handler {
 
 	mux.HandleFunc("GET /{$}", app.helloWorld)
 	mux.HandleFunc("GET /auth/callback", app.callback)
+	mux.HandleFunc("GET /auth/yt/callback", app.youtubeCallback)
 	mux.HandleFunc("GET /auth/login", app.login)
+	mux.HandleFunc("GET /auth/yt/login", app.youtubeLogin)
 	mux.HandleFunc("GET /me", app.me)
 	// mux.HandleFunc("GET /playlist", app.getConversionMap)
 	// mux.HandleFunc("GET /test", app.test)

@@ -30,6 +30,54 @@ func (app *application) login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
+func (app *application) youtubeLogin(w http.ResponseWriter, r *http.Request) {
+	state := generateRandomState()
+
+	app.sessionManager.Put(r.Context(), "oauth_state", state)
+
+	url := app.youtubeOAuth.AuthCodeURL(state)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+func (app *application) youtubeCallback(w http.ResponseWriter, r *http.Request) {
+	receivedState := r.URL.Query().Get("state")
+
+	storedState := app.sessionManager.GetString(r.Context(), "oauth_state")
+	if storedState == "" {
+		http.Error(w, "State not found", http.StatusBadRequest)
+		return
+	}
+
+	if receivedState != storedState {
+		http.Error(w, "Invalid state parameter", http.StatusBadRequest)
+		return
+	}
+
+	app.sessionManager.Remove(r.Context(), "oauth_state")
+
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		http.Error(w, "Code not found", http.StatusBadRequest)
+		return
+	}
+
+	token, err := app.youtubeOAuth.Exchange(r.Context(), code)
+	if err != nil {
+		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to renew session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "youtube_token", token)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 func (app *application) callback(w http.ResponseWriter, r *http.Request) {
 	receivedState := r.URL.Query().Get("state")
 
@@ -209,6 +257,14 @@ func (app *application) test(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(trackIDs); err != nil {
 		http.Error(w, "Failed to encode songs to JSON: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (app *application) youtubeTest(w http.ResponseWriter, r *http.Request) {
+	client, err := app.getAuthenticatedYoutubeClient(r)
+	if err != nil {
+		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
