@@ -297,6 +297,23 @@ func (app *application) youtubeTest2(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, thing)
 }
 
+func (app *application) youtubeUpdate(w http.ResponseWriter, r *http.Request) {
+	client, err := app.getAuthenticatedYoutubeClient(r)
+	if err != nil {
+		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// test1 PLXDnivaxCZoRKv-7GCq_XDgp_1c3No_T8
+	// big PLXDnivaxCZoSe9c7L-OZo09wuadzxEWtP
+	playlistID := "PLXDnivaxCZoSe9c7L-OZo09wuadzxEWtP"
+	err = youtube.UpdatePlaylistItems(client, playlistID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func (app *application) replacePost(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()

@@ -2,8 +2,10 @@ package youtube
 
 import (
 	"context"
+	"echo4eva/loona/internal/utils"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -33,8 +35,125 @@ func GetPlaylistIDs(client *http.Client) (interface{}, error) {
 	return playlistStuff, nil
 }
 
+func GetPlaylistItemsTitleAndIDs(client *http.Client, userPlaylistID string) (map[string][]string, error) {
+	// id != videoId
+	// id is the video associated with the playlist
+	// videoId is the unique id of the video
+	songTitleAndIDs := make(map[string][]string)
+
+	service, err := youtube.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	nextPageToken := ""
+	for {
+		call := service.PlaylistItems.List([]string{"snippet"}).
+			PlaylistId(userPlaylistID).
+			MaxResults(50).
+			PageToken(nextPageToken)
+
+		response, err := call.Do()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, item := range response.Items {
+			title := item.Snippet.Title
+			id := item.Id
+
+			if _, exists := songTitleAndIDs[title]; !exists {
+				songTitleAndIDs[title] = []string{id}
+			} else {
+				songTitleAndIDs[title] = append(songTitleAndIDs[title], id)
+			}
+		}
+
+		nextPageToken = response.NextPageToken
+		if nextPageToken == "" {
+			break
+		}
+	}
+
+	return songTitleAndIDs, nil
+}
+
+func UpdatePlaylistItems(client *http.Client, userPlaylistID string) error {
+	convertMap, err := utils.LoadJSONtoMap("yt_conversion_map.json")
+	if err != nil {
+		return fmt.Errorf("failed to load conversion map: %w", err)
+	}
+	// officialMap, err := utils.LoadJSONtoStringSliceMap("yt_playlist_official_items")
+	// if err != nil {
+	// 	return fmt.Errorf("failed to load official map: %w", err)
+	// }
+	boycottMap, err := utils.LoadJSONtoMap("yt_playlist_boycott_items.json")
+	if err != nil {
+		return fmt.Errorf("failed to load boycott map: %w", err)
+	}
+	officialSongIDsToDelete := []string{}
+	boycottSongIDsToAdd := []string{}
+
+	service, err := youtube.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		return err
+	}
+
+	// not sure if i need to send client, seems like slop.
+	userPlaylistItemTitles, err := GetPlaylistItemsTitleAndIDs(client, userPlaylistID)
+	if err != nil {
+		return err
+	}
+
+	for title, ids := range userPlaylistItemTitles {
+		// if this song title exists in the conversion map
+		if boycottTitle, exists := convertMap[title]; exists {
+			// get the song's id to delete
+			officialSongIDsToDelete = append(officialSongIDsToDelete, ids...)
+			// get the corresponding boycott IDs to add
+			if boycottSongID, exists := boycottMap[boycottTitle]; exists {
+				boycottSongIDsToAdd = append(boycottSongIDsToAdd, boycottSongID)
+			}
+		}
+	}
+
+	// deletes the official songs
+	for _, id := range officialSongIDsToDelete {
+		deleteCall := service.PlaylistItems.Delete(id)
+		err := deleteCall.Do()
+		if err != nil {
+			return err
+		}
+	}
+
+	// insert the boycott songs
+	for _, id := range boycottSongIDsToAdd {
+		// creates snippet to insert into playlist
+		itemSnippet := &youtube.PlaylistItem{
+			Snippet: &youtube.PlaylistItemSnippet{
+				PlaylistId: userPlaylistID,
+				ResourceId: &youtube.ResourceId{
+					Kind:    "youtube#video",
+					VideoId: id,
+				},
+			},
+		}
+
+		insertCall := service.PlaylistItems.Insert([]string{"snippet"}, itemSnippet)
+		response, err := insertCall.Do()
+		if err != nil {
+			return err
+		}
+
+		log.Printf("Inserted video: %s\n", response.Snippet.Title)
+	}
+
+	return nil
+}
+
 func GetPlaylistItems(client *http.Client, playlistID string, jsonName string) (map[string][]string, error) {
 	playlistItems := make(map[string][]string)
+	// boycottItems := make(map[string]string)
 
 	service, err := youtube.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
