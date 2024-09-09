@@ -269,7 +269,26 @@ func (app *application) youtubeTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	thing, err := youtube.Test(client)
+	thing, err := youtube.GetPlaylistIDs(client)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprint(w, thing)
+}
+
+func (app *application) youtubeTest2(w http.ResponseWriter, r *http.Request) {
+	client, err := app.getAuthenticatedYoutubeClient(r)
+	if err != nil {
+		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// weird4 PLXDnivaxCZoQ9p4tkW0LV0pP47-F2JwAB
+	// boycott PLXDnivaxCZoTC_tcbuj0gRU5O_0NRhiHg
+	name := "yt_playlist_boycott_items"
+	thing, err := youtube.GetPlaylistItems(client, "PLXDnivaxCZoTC_tcbuj0gRU5O_0NRhiHg", name)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

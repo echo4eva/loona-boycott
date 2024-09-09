@@ -18,6 +18,7 @@ func (app *application) routes() http.Handler {
 	// mux.HandleFunc("GET /test", app.test)
 	mux.HandleFunc("POST /replace", app.replacePost)
 	mux.HandleFunc("GET /test", app.youtubeTest)
+	mux.HandleFunc("GET /test2", app.youtubeTest2)
 
 	return app.sessionManager.LoadAndSave(app.authenticate(mux))
 }
