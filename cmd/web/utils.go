@@ -30,25 +30,40 @@ func generateRandomState() string {
 }
 
 func getPlaylistID(url string) string {
-	// Find the index of "playlist/" in the URL
-	start := strings.Index(url, "playlist/")
-	if start == -1 {
-		return "" // "playlist/" not found in the URL
-	}
-	start += len("playlist/") // Move to the start of the ID
 
-	// Find the index of "?" after "playlist/"
-	end := strings.Index(url[start:], "?")
-	if end == -1 {
-		// If "?" is not found, return the rest of the string
+	if strings.Contains(url, "spotify.com") {
+		// Find the index of "playlist/" in the URL
+		start := strings.Index(url, "playlist/")
+		if start == -1 {
+			return "" // "playlist/" not found in the URL
+		}
+		start += len("playlist/") // Move to the start of the ID
+
+		// Find the index of "?" after "playlist/"
+		end := strings.Index(url[start:], "?")
+		if end == -1 {
+			// If "?" is not found, return the rest of the string
+			return url[start:]
+		}
+
+		// Return the substring between "playlist/" and "?"
+		return url[start : start+end]
+	} else if strings.Contains(url, "youtube.com") {
+
+		start := strings.Index(url, "list=")
+		if start == -1 {
+			return ""
+		}
+
+		start += len("list=") // Move to the start of the ID
+
 		return url[start:]
 	}
 
-	// Return the substring between "playlist/" and "?"
-	return url[start : start+end]
+	return ""
 }
 
-func (app *application) getAuthenticatedClient(r *http.Request) (*http.Client, error) {
+func (app *application) getAuthenticatedSpotifyClient(r *http.Request) (*http.Client, error) {
 	tokenInterface := app.sessionManager.Get(r.Context(), "spotify_token")
 	if tokenInterface == nil {
 		return nil, errors.New("no token found for the session")
@@ -126,9 +141,17 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	buf.WriteTo(w)
 }
 
-func (app *application) isAuthenticated(r *http.Request) bool {
-	isAuthenticated, exists := r.Context().Value(isAuthenticatedContextKey).(bool)
-	app.logger.Info("isAuthenticated", isAuthenticated, "exists", exists)
+func (app *application) isSpotifyAuthenticated(r *http.Request) bool {
+	isAuthenticated, exists := r.Context().Value(isSpotifyAuthenticatedContextKey).(bool)
+	if !exists {
+		return false
+	}
+
+	return isAuthenticated
+}
+
+func (app *application) isYoutubeAuthenticated(r *http.Request) bool {
+	isAuthenticated, exists := r.Context().Value(isYoutubeAuthenticatedContextKey).(bool)
 	if !exists {
 		return false
 	}
@@ -138,7 +161,9 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 
 func (app *application) newTemplateData(r *http.Request) templateData {
 	return templateData{
-		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
-		IsAuthenticated: app.isAuthenticated(r),
+		SpotifyFlash:           app.sessionManager.PopString(r.Context(), "spotifyFlash"),
+		YoutubeFlash:           app.sessionManager.PopString(r.Context(), "youtubeFlash"),
+		IsSpotifyAuthenticated: app.isSpotifyAuthenticated(r),
+		IsYoutubeAuthenticated: app.isYoutubeAuthenticated(r),
 	}
 }

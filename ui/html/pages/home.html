@@ -2,19 +2,44 @@
 
 {{define "main"}}
     <div class="container">
-    {{if .IsAuthenticated}}
-        <form action="/replace" method="POST">
-            {{with .Flash}}
-            <p>{{.}}</p>
-            {{end}}
-            {{with .Form.FieldError}}
-            <p>{{.}}</p>
-            {{end}}
-            <input name="playlist" placeholder="Enter playlist URL"></input>
-            <input type="submit" value="Submit">
-        </form>
-    {{else}}
-        <a href="/auth/login">LOGIN</a>
-    {{end}}
+        <div class="platform-toggle">
+            <button id="spotifyToggle" class="active">Spotify</button>
+            <button id="youtubeToggle">YouTube</button>
+        </div>
+
+        <div id="spotifySection" class="platform-section">
+        {{if .IsSpotifyAuthenticated}}
+            <form action="/replace/spotify" method="POST">
+                {{with .SpotifyFlash}}
+                <p>{{.}}</p>
+                {{end}}
+                {{with .Form.FieldError}}
+                <p>{{.}}</p>
+                {{end}}
+                <input name="spotifyPlaylist" placeholder="Enter sp playlist URL"></input>
+                <input type="submit" value="Submit">
+            </form>
+        {{else}}
+            <a href="/auth/spotify/login">LOGIN TO SPOTIFY</a>
+        {{end}}
+        </div>
+
+        <div id="youtubeSection" class="platform-section">
+        {{if .IsYoutubeAuthenticated}}
+            <form action="/replace/youtube" method="POST">
+                {{with .YoutubeFlash}}
+                <p>{{.}}</p>
+                {{end}}
+                {{with .Form.FieldError}}
+                <p>{{.}}</p>
+                {{end}}
+                <input name="youtubePlaylist" placeholder="Enter yt playlist URL"></input>
+                <input type="submit" value="Submit"></input>
+            </form>
+        {{else}}
+            <a href="/auth/youtube/login">LOGIN TO YOUTUBE</a>
+        </div>
+        {{end}}
     </div>
-{{end}}
+{{end}} 
+

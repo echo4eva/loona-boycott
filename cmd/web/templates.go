@@ -6,9 +6,11 @@ import (
 )
 
 type templateData struct {
-	Form            any
-	Flash           string
-	IsAuthenticated bool
+	Form                   any
+	SpotifyFlash           string
+	YoutubeFlash           string
+	IsSpotifyAuthenticated bool
+	IsYoutubeAuthenticated bool
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

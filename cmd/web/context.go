@@ -2,4 +2,7 @@ package main
 
 type contextKey string
 
-const isAuthenticatedContextKey = contextKey("isAuthenticated")
+const (
+	isSpotifyAuthenticatedContextKey = contextKey("isSpotifyAuthenticated")
+	isYoutubeAuthenticatedContextKey = contextKey("isYoutubeAuthenticated")
+)

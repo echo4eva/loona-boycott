@@ -22,7 +22,7 @@ func (app *application) helloWorld(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "home.html", data)
 }
 
-func (app *application) login(w http.ResponseWriter, r *http.Request) {
+func (app *application) spotifyLogin(w http.ResponseWriter, r *http.Request) {
 	state := generateRandomState()
 
 	app.sessionManager.Put(r.Context(), "oauth_state", state)
@@ -79,7 +79,7 @@ func (app *application) youtubeCallback(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (app *application) callback(w http.ResponseWriter, r *http.Request) {
+func (app *application) spotifyCallback(w http.ResponseWriter, r *http.Request) {
 	receivedState := r.URL.Query().Get("state")
 
 	storedState := app.sessionManager.GetString(r.Context(), "oauth_state")
@@ -119,7 +119,7 @@ func (app *application) callback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) me(w http.ResponseWriter, r *http.Request) {
-	client, err := app.getAuthenticatedClient(r)
+	client, err := app.getAuthenticatedSpotifyClient(r)
 	if err != nil {
 		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -160,7 +160,7 @@ func (app *application) me(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) getConversionMap(w http.ResponseWriter, r *http.Request) {
 
-	client, err := app.getAuthenticatedClient(r)
+	client, err := app.getAuthenticatedSpotifyClient(r)
 	if err != nil {
 		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -242,7 +242,7 @@ func (app *application) getConversionMap(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) test(w http.ResponseWriter, r *http.Request) {
-	client, err := app.getAuthenticatedClient(r)
+	client, err := app.getAuthenticatedSpotifyClient(r)
 	if err != nil {
 		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -297,24 +297,7 @@ func (app *application) youtubeTest2(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, thing)
 }
 
-func (app *application) youtubeUpdate(w http.ResponseWriter, r *http.Request) {
-	client, err := app.getAuthenticatedYoutubeClient(r)
-	if err != nil {
-		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// test1 PLXDnivaxCZoRKv-7GCq_XDgp_1c3No_T8
-	// big PLXDnivaxCZoSe9c7L-OZo09wuadzxEWtP
-	playlistID := "PLXDnivaxCZoSe9c7L-OZo09wuadzxEWtP"
-	err = youtube.UpdatePlaylistItems(client, playlistID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-func (app *application) replacePost(w http.ResponseWriter, r *http.Request) {
+func (app *application) youtubeReplacePost(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
@@ -324,6 +307,50 @@ func (app *application) replacePost(w http.ResponseWriter, r *http.Request) {
 
 	form := playlistReplaceForm{
 		Playlist:   r.PostForm.Get("playlist"),
+		FieldError: "",
+	}
+
+	// check if valid playlist
+	if !strings.HasPrefix(form.Playlist, "https://www.youtube.com/") ||
+		!strings.HasPrefix(form.Playlist, "https://music.youtube.com/") {
+		form.FieldError = "Please enter a valid Spotify playlist link"
+	}
+
+	if form.FieldError != "" {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "home.html", data)
+	}
+
+	playlistID := getPlaylistID(form.Playlist)
+
+	client, err := app.getAuthenticatedYoutubeClient(r)
+	if err != nil {
+		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = youtube.UpdatePlaylistItems(client, playlistID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "youtubeFlash", "Playlist updated successfully!")
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) spotifyReplacePost(w http.ResponseWriter, r *http.Request) {
+
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Failed to parse form: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	form := playlistReplaceForm{
+		Playlist:   r.PostForm.Get("spotifyPlaylist"),
 		FieldError: "",
 	}
 
@@ -340,7 +367,7 @@ func (app *application) replacePost(w http.ResponseWriter, r *http.Request) {
 
 	playlistID := getPlaylistID(form.Playlist)
 
-	client, err := app.getAuthenticatedClient(r)
+	client, err := app.getAuthenticatedSpotifyClient(r)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -352,7 +379,7 @@ func (app *application) replacePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "flash", "Playlist updated successfully!")
+	app.sessionManager.Put(r.Context(), "spotifyFlash", "Playlist updated successfully!")
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
