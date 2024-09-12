@@ -18,11 +18,13 @@ type playlistReplaceForm struct {
 
 func (app *application) helloWorld(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-	data.Form = playlistReplaceForm{}
+	data.SpotifyForm = playlistReplaceForm{}
+	data.YoutubeForm = playlistReplaceForm{}
 	app.render(w, r, http.StatusOK, "home.html", data)
 }
 
 func (app *application) spotifyLogin(w http.ResponseWriter, r *http.Request) {
+
 	state := generateRandomState()
 
 	app.sessionManager.Put(r.Context(), "oauth_state", state)
@@ -32,6 +34,7 @@ func (app *application) spotifyLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) youtubeLogin(w http.ResponseWriter, r *http.Request) {
+
 	state := generateRandomState()
 
 	app.sessionManager.Put(r.Context(), "oauth_state", state)
@@ -80,6 +83,7 @@ func (app *application) youtubeCallback(w http.ResponseWriter, r *http.Request) 
 }
 
 func (app *application) spotifyCallback(w http.ResponseWriter, r *http.Request) {
+
 	receivedState := r.URL.Query().Get("state")
 
 	storedState := app.sessionManager.GetString(r.Context(), "oauth_state")
@@ -306,20 +310,21 @@ func (app *application) youtubeReplacePost(w http.ResponseWriter, r *http.Reques
 	}
 
 	form := playlistReplaceForm{
-		Playlist:   r.PostForm.Get("playlist"),
+		Playlist:   r.PostForm.Get("youtubePlaylist"),
 		FieldError: "",
 	}
 
 	// check if valid playlist
 	if !strings.HasPrefix(form.Playlist, "https://www.youtube.com/") ||
 		!strings.HasPrefix(form.Playlist, "https://music.youtube.com/") {
-		form.FieldError = "Please enter a valid Spotify playlist link"
+		form.FieldError = "Please enter a valid Youtube playlist link"
 	}
 
 	if form.FieldError != "" {
 		data := app.newTemplateData(r)
-		data.Form = form
+		data.YoutubeForm = form
 		app.render(w, r, http.StatusUnprocessableEntity, "home.html", data)
+		return
 	}
 
 	playlistID := getPlaylistID(form.Playlist)
@@ -361,8 +366,9 @@ func (app *application) spotifyReplacePost(w http.ResponseWriter, r *http.Reques
 
 	if form.FieldError != "" {
 		data := app.newTemplateData(r)
-		data.Form = form
+		data.SpotifyForm = form
 		app.render(w, r, http.StatusUnprocessableEntity, "home.html", data)
+		return
 	}
 
 	playlistID := getPlaylistID(form.Playlist)
@@ -380,6 +386,18 @@ func (app *application) spotifyReplacePost(w http.ResponseWriter, r *http.Reques
 	}
 
 	app.sessionManager.Put(r.Context(), "spotifyFlash", "Playlist updated successfully!")
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) spotifyLogout(w http.ResponseWriter, r *http.Request) {
+	app.sessionManager.Remove(r.Context(), "spotify_token")
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) youtubeLogout(w http.ResponseWriter, r *http.Request) {
+	app.sessionManager.Remove(r.Context(), "youtube_token")
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

@@ -2,44 +2,46 @@
 
 {{define "main"}}
     <div class="container">
-        <div class="platform-toggle">
-            <button id="spotifyToggle" class="active">Spotify</button>
-            <button id="youtubeToggle">YouTube</button>
-        </div>
-
-        <div id="spotifySection" class="platform-section">
-        {{if .IsSpotifyAuthenticated}}
-            <form action="/replace/spotify" method="POST">
-                {{with .SpotifyFlash}}
-                <p>{{.}}</p>
-                {{end}}
-                {{with .Form.FieldError}}
-                <p>{{.}}</p>
-                {{end}}
-                <input name="spotifyPlaylist" placeholder="Enter sp playlist URL"></input>
-                <input type="submit" value="Submit">
-            </form>
+        {{if and (not .IsSpotifyAuthenticated) (not .IsYoutubeAuthenticated)}}
+            <div class="login-options">
+                <h2>Choose a platform to login:</h2>
+                <a href="/auth/spotify/login" class="login-button">LOGIN TO SPOTIFY</a>
+                <a href="/auth/youtube/login" class="login-button">LOGIN TO YOUTUBE</a>
+            </div>
         {{else}}
-            <a href="/auth/spotify/login">LOGIN TO SPOTIFY</a>
-        {{end}}
-        </div>
+            {{if .IsSpotifyAuthenticated}}
+                <div id="spotifySection" class="platform-section">
+                    <h2>Spotify</h2>
+                    <form action="/replace/spotify" method="POST">
+                        {{with .SpotifyFlash}}
+                        <p class="flash-message">{{.}}</p>
+                        {{end}}
+                        {{with .SpotifyForm.FieldError}}
+                        <p class="error-message">{{.}}</p>
+                        {{end}}
+                        <input name="spotifyPlaylist" placeholder="Enter Spotify playlist URL">
+                        <input type="submit" value="Submit">
+                    </form>
+                    <a href="/auth/spotify/logout" class="logout-button">Logout from Spotify</a>
+                </div>
+            {{end}}
 
-        <div id="youtubeSection" class="platform-section">
-        {{if .IsYoutubeAuthenticated}}
-            <form action="/replace/youtube" method="POST">
-                {{with .YoutubeFlash}}
-                <p>{{.}}</p>
-                {{end}}
-                {{with .Form.FieldError}}
-                <p>{{.}}</p>
-                {{end}}
-                <input name="youtubePlaylist" placeholder="Enter yt playlist URL"></input>
-                <input type="submit" value="Submit"></input>
-            </form>
-        {{else}}
-            <a href="/auth/youtube/login">LOGIN TO YOUTUBE</a>
-        </div>
+            {{if .IsYoutubeAuthenticated}}
+                <div id="youtubeSection" class="platform-section">
+                    <h2>YouTube</h2>
+                    <form action="/replace/youtube" method="POST">
+                        {{with .YoutubeFlash}}
+                        <p class="flash-message">{{.}}</p>
+                        {{end}}
+                        {{with .YoutubeForm.FieldError}}
+                        <p class="error-message">{{.}}</p>
+                        {{end}}
+                        <input name="youtubePlaylist" placeholder="Enter YouTube playlist URL">
+                        <input type="submit" value="Submit">
+                    </form>
+                    <a href="/auth/youtube/logout" class="logout-button">Logout from YouTube</a>
+                </div>
+            {{end}}
         {{end}}
     </div>
-{{end}} 
-
+{{end}}

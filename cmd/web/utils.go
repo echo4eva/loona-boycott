@@ -162,8 +162,8 @@ func (app *application) isYoutubeAuthenticated(r *http.Request) bool {
 func (app *application) newTemplateData(r *http.Request) templateData {
 	return templateData{
 		SpotifyFlash:           app.sessionManager.PopString(r.Context(), "spotifyFlash"),
-		YoutubeFlash:           app.sessionManager.PopString(r.Context(), "youtubeFlash"),
 		IsSpotifyAuthenticated: app.isSpotifyAuthenticated(r),
+		YoutubeFlash:           app.sessionManager.PopString(r.Context(), "youtubeFlash"),
 		IsYoutubeAuthenticated: app.isYoutubeAuthenticated(r),
 	}
 }

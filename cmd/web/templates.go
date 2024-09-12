@@ -6,10 +6,11 @@ import (
 )
 
 type templateData struct {
-	Form                   any
+	SpotifyForm            any
 	SpotifyFlash           string
-	YoutubeFlash           string
 	IsSpotifyAuthenticated bool
+	YoutubeForm            any
+	YoutubeFlash           string
 	IsYoutubeAuthenticated bool
 }
 
