@@ -4,14 +4,16 @@
     <div class="container">
         {{if and (not .IsSpotifyAuthenticated) (not .IsYoutubeAuthenticated)}}
             <div class="login-options">
-                <h2>Choose a platform to login:</h2>
-                <a href="/auth/spotify/login" class="login-button">LOGIN TO SPOTIFY</a>
-                <a href="/auth/youtube/login" class="login-button">LOGIN TO YOUTUBE</a>
+                <p>choose a platform to use:</p>
+                <div class="login-buttons">
+                    <a href="/auth/spotify/login" class="login-button spotify-button"></a>
+                    <a href="/auth/youtube/login" class="login-button youtube-button"></a>
+                </div>
             </div>
         {{else}}
             {{if .IsSpotifyAuthenticated}}
                 <div id="spotifySection" class="platform-section">
-                    <h2>Spotify</h2>
+                    <img src="/static/img/spotify.svg" alt="Spotify Logo" class="platform-logo">
                     <form action="/replace/spotify" method="POST">
                         {{with .SpotifyFlash}}
                         <p class="flash-message">{{.}}</p>
@@ -20,15 +22,17 @@
                         <p class="error-message">{{.}}</p>
                         {{end}}
                         <input name="spotifyPlaylist" placeholder="Enter Spotify playlist URL">
-                        <input type="submit" value="Submit">
+                        <div class="button-container">
+                            <a href="/auth/spotify/logout" class="logout-button">Logout</a>
+                            <button type="submit" class="submit-button">Submit</button>
+                        </div>
                     </form>
-                    <a href="/auth/spotify/logout" class="logout-button">Logout from Spotify</a>
                 </div>
             {{end}}
 
             {{if .IsYoutubeAuthenticated}}
                 <div id="youtubeSection" class="platform-section">
-                    <h2>YouTube</h2>
+                    <img src="/static/img/youtube.svg" alt="Youtube Logo" class="platform-logo">
                     <form action="/replace/youtube" method="POST">
                         {{with .YoutubeFlash}}
                         <p class="flash-message">{{.}}</p>
@@ -37,9 +41,11 @@
                         <p class="error-message">{{.}}</p>
                         {{end}}
                         <input name="youtubePlaylist" placeholder="Enter YouTube playlist URL">
-                        <input type="submit" value="Submit">
+                        <div class="button-container">
+                            <a href="/auth/youtube/logout" class="logout-button">Logout</a>
+                            <button type="submit" class="submit-button">Submit</button>
+                        </div>
                     </form>
-                    <a href="/auth/youtube/logout" class="logout-button">Logout from YouTube</a>
                 </div>
             {{end}}
         {{end}}
