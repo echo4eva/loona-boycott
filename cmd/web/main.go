@@ -24,7 +24,7 @@ type application struct {
 
 func main() {
 	// init connection pool to redis
-	redisURL := os.Getenv("REDIS_URL") + ":6379"
+	redisURL := os.Getenv("REDIS_URL")
 	// redisURL := "localhost:6379"
 	pool := &redis.Pool{
 		MaxIdle: 10,
