@@ -2,7 +2,6 @@ package main
 
 import (
 	"echo4eva/loona/internal/config"
-	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -25,8 +24,8 @@ type application struct {
 
 func main() {
 	// init connection pool to redis
-	// redisURL := os.Getenv("REDIS_URL") + ":6379"
-	redisURL := "localhost:6379"
+	redisURL := os.Getenv("REDIS_URL") + ":6379"
+	// redisURL := "localhost:6379"
 	pool := &redis.Pool{
 		MaxIdle: 10,
 		Dial: func() (redis.Conn, error) {
@@ -57,11 +56,10 @@ func main() {
 		templateCache:  templateCache,
 	}
 
-	serverPort := os.Getenv("PORT")
 	// init server
 	server := &http.Server{
-		Addr: fmt.Sprintf("localhost:%s", serverPort),
-		// Addr: "0.0.0.0:" + serverPort,
+		// Addr: fmt.Sprintf("localhost:%s", serverPort),
+		Addr: ":8080",
 		// first handler == main router
 		Handler:  app.routes(),
 		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
