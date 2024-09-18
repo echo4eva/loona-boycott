@@ -1,7 +1,8 @@
 /* \home\echo\projects\loona-boycott\ui\static\css\style.css */
 
 li {
-    text-decoration: underline;
+    font-weight: bold;
+
 }
 
 a {
@@ -184,3 +185,13 @@ form {
     color: #721c24;
 }
 
+@media (max-width: 426px) {
+    .container {
+        padding: 0 10px;
+    }
+
+    main {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+}
