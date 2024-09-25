@@ -6,16 +6,26 @@ services:
       context: .
       dockerfile: dockerfile
     ports:
-      - "8080:8080"
+      - "8080"
     depends_on:
       - redis
     environment:
-      SPOTIFY_REDIRECT_URL: "http://loonaboycott.com:8080/auth/spotify/callback"
-      YOUTUBE_REDIRECT_URL: "http://loonaboycott.com:8080/auth/youtube/callback"
+      SPOTIFY_REDIRECT_URL: "https://loonaboycott.com/auth/spotify/callback"
+      YOUTUBE_REDIRECT_URL: "https://loonaboycott.com/auth/youtube/callback"
       REDIS_URL: "redis:6379"
 
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
 
   redis:
     image: redis:latest
     ports:
-      - "6379:6379"
+      - "6379"
