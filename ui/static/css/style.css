@@ -195,7 +195,7 @@ form {
         overflow-wrap: break-word;
     }
 
-    .platform-section {
-        padding: 10px;
+    .platform-section form {
+        max-width: 300px;
     }
 }
