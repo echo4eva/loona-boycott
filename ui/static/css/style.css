@@ -194,4 +194,8 @@ form {
         word-wrap: break-word;
         overflow-wrap: break-word;
     }
+
+    .platform-section {
+        padding: 10px;
+    }
 }
