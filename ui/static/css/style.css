@@ -2,11 +2,33 @@
 
 li {
     font-weight: bold;
+}
 
+dl {
+    margin: 0;
+    padding: 0;
+}
+
+dt {
+    font-weight: bold;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    color: #333;
+}
+
+dd {
+    margin-left: 0;
+    padding-left: 1em;
+    margin-bottom: 1em;
 }
 
 a {
     text-decoration: none;
+    color: #F98F81 
+}
+
+a:visited {
+    color: #7A0434;
 }
 
 h1 {
