@@ -52,7 +52,7 @@
         {{else}}
             {{if .IsSpotifyAuthenticated}}
                 <div id="spotifySection" class="platform-section">
-                    <img src="/static/img/spotify.svg" alt="Spotify Logo" class="platform-logo">
+                    <img src="/static/img/spotify.svg" alt="Spotify music streaming service logo for account login" class="platform-logo">
                     <form action="/replace/spotify" method="POST">
                         {{with .SpotifyFlash}}
                         <p class="flash-message">{{.}}</p>
@@ -71,7 +71,7 @@
 
             {{if .IsYoutubeAuthenticated}}
                 <div id="youtubeSection" class="platform-section">
-                    <img src="/static/img/youtube.svg" alt="Youtube Logo" class="platform-logo">
+                    <img src="/static/img/youtube.svg" alt="YouTube video platform logo for account login" class="platform-logo">
                     <form action="/replace/youtube" method="POST">
                         {{with .YoutubeFlash}}
                         <p class="flash-message">{{.}}</p>
