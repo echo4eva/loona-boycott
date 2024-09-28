@@ -220,4 +220,8 @@ form {
     .platform-section form {
         max-width: 300px;
     }
+
+    .faq-section {
+        max-width: 300px;
+    }
 }
