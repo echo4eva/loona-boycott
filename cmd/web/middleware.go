@@ -31,7 +31,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 func commonHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Security-Policy",
-			"default-src 'self'; style-src 'self';")
+			"default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;")
 		w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
 		w.Header().Set("X-Content-Tyoe-Options", "no-sniff")
 		w.Header().Set("X-Frame-Options", "deny")
