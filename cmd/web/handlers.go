@@ -163,6 +163,48 @@ func (app *application) me(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) getConversionMap(w http.ResponseWriter, r *http.Request) {
+	songItems, err := loadJSONtoMap("data/sp_song_items.json")
+	if err != nil {
+		http.Error(w, "Failed to load episodeItems from JSON: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	episodeItems, err := loadJSONtoMap("data/sp_episode_items.json")
+	if err != nil {
+		http.Error(w, "Failed to load episodeItems from JSON: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	songsToEpisodeIDMap := make(map[string]string)
+	for songName, songIDs := range songItems {
+		for _, songID := range songIDs {
+			if episodeID, exists := episodeItems[songName]; exists {
+				songsToEpisodeIDMap[songID] = episodeID[0]
+			} else {
+				app.logger.Info(fmt.Sprintf("No matching episode found for song: %s", songName))
+			}
+		}
+	}
+
+	songsToEpisodeIDMapJSON, err := json.MarshalIndent(songsToEpisodeIDMap, "", "  ")
+	if err != nil {
+		http.Error(w, "Failed to marshal songsToEpisodeIDMap to JSON: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = os.WriteFile("data/sp_conversion_map.json", songsToEpisodeIDMapJSON, 0644)
+	if err != nil {
+		http.Error(w, "Failed to write songsToEpisodeIDMap to file: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(songsToEpisodeIDMap); err != nil {
+		http.Error(w, "Failed to encode songs to JSON: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (app *application) getTestConversionMap(w http.ResponseWriter, r *http.Request) {
 
 	client, err := app.getAuthenticatedSpotifyClient(r)
 	if err != nil {
@@ -381,6 +423,10 @@ func (app *application) spotifyReplacePost(w http.ResponseWriter, r *http.Reques
 
 	err = spotify.UpdatePlaylistItems(client, playlistID)
 	if err != nil {
+		form.FieldError = "Error: User not in Beta, notify owner for access"
+		data := app.newTemplateData(r)
+		data.SpotifyForm = form
+		app.render(w, r, http.StatusInternalServerError, "home.html", data)
 		app.serverError(w, r, err)
 		return
 	}

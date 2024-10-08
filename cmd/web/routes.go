@@ -16,7 +16,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /auth/youtube/login", app.youtubeLogin)
 	mux.HandleFunc("GET /auth/youtube/logout", app.youtubeLogout)
 	// mux.HandleFunc("GET /me", app.me)
-	// mux.HandleFunc("GET /playlist", app.getConversionMap)
+	mux.HandleFunc("GET /playlist", app.getConversionMap)
 	// mux.HandleFunc("GET /test", app.test)
 	mux.HandleFunc("POST /replace/spotify", app.spotifyReplacePost)
 	// mux.HandleFunc("GET /test", app.youtubeTest)

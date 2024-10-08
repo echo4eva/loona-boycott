@@ -5,8 +5,6 @@ import (
 	"echo4eva/loona/internal/utils"
 	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
 )
 
@@ -34,6 +32,13 @@ type DeleteTracksRequest struct {
 
 type PostTracksRequest struct {
 	URIs []string `json:"uris"`
+}
+
+type ErrorResponse struct {
+	Error struct {
+		Status  int    `json:"status"`
+		Message string `json:"message"`
+	} `json:"error"`
 }
 
 func GetPlaylistItems(client *http.Client, playlistID string) (map[string][]string, error) {
@@ -114,7 +119,7 @@ func UpdatePlaylistItems(client *http.Client, playlistID string) error {
 	}
 
 	// compare if songs from user playlist in convert map
-	convertMap, err := utils.LoadJSONtoMap("conversion_map.json")
+	convertMap, err := utils.LoadJSONtoMap("sp_conversion_map.json")
 	if err != nil {
 		return fmt.Errorf("failed to load conversion map: %w", err)
 	}
@@ -189,66 +194,7 @@ func UpdatePlaylistItems(client *http.Client, playlistID string) error {
 			return fmt.Errorf("failed to send post request: %w", err)
 		}
 		defer resp.Body.Close()
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Printf("Error reading response body: %v", err)
-			return err
-		}
-
-		log.Printf("%s\n", string(body))
 	}
 
 	return nil
-}
-
-func Bruh() error {
-	episode_items, err := utils.LoadJSONtoMap("episode_items")
-	if err != nil {
-		return err
-	}
-
-	conversion_map, err := utils.LoadJSONtoMap("episode_items.json")
-	if err != nil {
-		return err
-	}
-
-	// get values of both
-	episode_items_values := make([]string, 0, len(episode_items))
-	for _, value := range episode_items {
-		episode_items_values = append(episode_items_values, value)
-	}
-
-	conversion_item_values := make([]string, 0, len(conversion_map))
-	for _, value := range conversion_map {
-		conversion_item_values = append(conversion_item_values, value)
-	}
-
-	// Items in episode_items_values that are not in conversion_item_values
-	diff1 := difference(episode_items_values, conversion_item_values)
-
-	for _, item := range diff1 {
-		log.Printf("%s", item)
-	}
-
-	return nil
-}
-
-func contains(slice []string, item string) bool {
-	for _, v := range slice {
-		if v == item {
-			return true
-		}
-	}
-	return false
-}
-
-func difference(slice1, slice2 []string) []string {
-	diff := make([]string, 0)
-	for _, item := range slice1 {
-		if !contains(slice2, item) {
-			diff = append(diff, item)
-		}
-	}
-	return diff
 }
