@@ -379,7 +379,11 @@ func (app *application) youtubeReplacePost(w http.ResponseWriter, r *http.Reques
 
 	err = youtube.UpdatePlaylistItems(client, playlistID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		form.FieldError = "Error: Invalid playlist, please re-enter"
+		data := app.newTemplateData(r)
+		data.YoutubeForm = form
+		app.render(w, r, http.StatusInternalServerError, "home.html", data)
+		app.serverError(w, r, err)
 		return
 	}
 
