@@ -57,7 +57,12 @@ func getPlaylistID(url string) string {
 
 		start += len("list=") // Move to the start of the ID
 
-		return url[start:]
+		end := strings.Index(url[start:], "&")
+		if end == -1 {
+			return url[start:]
+		}
+
+		return url[start : start+end]
 	}
 
 	return ""

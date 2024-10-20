@@ -358,7 +358,8 @@ func (app *application) youtubeReplacePost(w http.ResponseWriter, r *http.Reques
 
 	// check if valid playlist
 	if !strings.HasPrefix(form.Playlist, "https://www.youtube.com/playlist?list=") &&
-		!strings.HasPrefix(form.Playlist, "https://music.youtube.com/playlist?list=") {
+		!strings.HasPrefix(form.Playlist, "https://music.youtube.com/playlist?list=") &&
+		!strings.HasPrefix(form.Playlist, "https://youtube.com/playlist?list=") {
 		form.FieldError = "Please enter a valid Youtube playlist link"
 	}
 
