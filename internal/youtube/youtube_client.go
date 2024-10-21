@@ -5,7 +5,6 @@ import (
 	"echo4eva/loona/internal/utils"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -136,12 +135,10 @@ func UpdatePlaylistItems(client *http.Client, userPlaylistID string) error {
 		}
 
 		insertCall := service.PlaylistItems.Insert([]string{"snippet"}, itemSnippet)
-		response, err := insertCall.Do()
+		_, err := insertCall.Do()
 		if err != nil {
 			return err
 		}
-
-		log.Printf("Inserted video: %s\n", response.Snippet.Title)
 	}
 
 	return nil

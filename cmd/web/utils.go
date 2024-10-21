@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"runtime/debug"
@@ -59,9 +60,11 @@ func getPlaylistID(url string) string {
 
 		end := strings.Index(url[start:], "&")
 		if end == -1 {
+			log.Printf("-1 ")
+			log.Printf(url[start:])
 			return url[start:]
 		}
-
+		log.Printf(url[start:])
 		return url[start : start+end]
 	}
 
