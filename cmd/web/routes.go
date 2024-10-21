@@ -15,13 +15,10 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /auth/youtube/callback", app.youtubeCallback)
 	mux.HandleFunc("GET /auth/youtube/login", app.youtubeLogin)
 	mux.HandleFunc("GET /auth/youtube/logout", app.youtubeLogout)
-	// mux.HandleFunc("GET /me", app.me)
-	mux.HandleFunc("GET /playlist", app.getConversionMap)
-	// mux.HandleFunc("GET /test", app.test)
+	mux.HandleFunc("GET /playlist", app.getSpotifyConversionMap)
 	mux.HandleFunc("POST /replace/spotify", app.spotifyReplacePost)
-	// mux.HandleFunc("GET /test", app.youtubeTest)
-	// mux.HandleFunc("GET /test2", app.youtubeTest2)
 	mux.HandleFunc("POST /replace/youtube", app.youtubeReplacePost)
+	// mux.HandleFunc("GET /dev/youtube/update", app.youtubeUpdateJSONItems)
 
 	return app.sessionManager.LoadAndSave(app.authenticate(commonHeaders(mux)))
 }

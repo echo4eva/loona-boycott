@@ -35,7 +35,7 @@ func GetPlaylistIDs(client *http.Client) (interface{}, error) {
 	return playlistStuff, nil
 }
 
-func GetPlaylistItemsTitleAndIDs(client *http.Client, userPlaylistID string) (map[string][]string, error) {
+func GetUserPlaylistItems(client *http.Client, userPlaylistID string) (map[string][]string, error) {
 	// id != videoId
 	// id is the video associated with the playlist
 	// videoId is the unique id of the video
@@ -79,14 +79,11 @@ func GetPlaylistItemsTitleAndIDs(client *http.Client, userPlaylistID string) (ma
 }
 
 func UpdatePlaylistItems(client *http.Client, userPlaylistID string) error {
+	// conversion map was manually created and edited
 	convertMap, err := utils.LoadJSONtoMap("yt_conversion_map.json")
 	if err != nil {
 		return fmt.Errorf("failed to load conversion map: %w", err)
 	}
-	// officialMap, err := utils.LoadJSONtoStringSliceMap("yt_playlist_official_items")
-	// if err != nil {
-	// 	return fmt.Errorf("failed to load official map: %w", err)
-	// }
 	boycottMap, err := utils.LoadJSONtoMap("yt_playlist_boycott_items.json")
 	if err != nil {
 		return fmt.Errorf("failed to load boycott map: %w", err)
@@ -99,8 +96,7 @@ func UpdatePlaylistItems(client *http.Client, userPlaylistID string) error {
 		return err
 	}
 
-	// not sure if i need to send client, seems like slop.
-	userPlaylistItemTitles, err := GetPlaylistItemsTitleAndIDs(client, userPlaylistID)
+	userPlaylistItemTitles, err := GetUserPlaylistItems(client, userPlaylistID)
 	if err != nil {
 		return err
 	}
@@ -151,9 +147,8 @@ func UpdatePlaylistItems(client *http.Client, userPlaylistID string) error {
 	return nil
 }
 
-func GetPlaylistItems(client *http.Client, playlistID string, jsonName string) (map[string][]string, error) {
-	playlistItems := make(map[string][]string)
-	// boycottItems := make(map[string]string)
+func GetBoycottPlaylistItems(client *http.Client, playlistID string, jsonName string) (map[string]string, error) {
+	boycottItems := make(map[string]string)
 
 	service, err := youtube.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
@@ -175,10 +170,8 @@ func GetPlaylistItems(client *http.Client, playlistID string, jsonName string) (
 		for _, item := range response.Items {
 			videoTitle := item.Snippet.Title
 			videoID := item.Snippet.ResourceId.VideoId
-			if _, exists := playlistItems[videoTitle]; !exists {
-				playlistItems[videoTitle] = []string{videoID}
-			} else {
-				playlistItems[videoTitle] = append(playlistItems[videoTitle], videoID)
+			if _, exists := boycottItems[videoTitle]; !exists {
+				boycottItems[videoTitle] = videoID
 			}
 		}
 
@@ -188,15 +181,64 @@ func GetPlaylistItems(client *http.Client, playlistID string, jsonName string) (
 		}
 	}
 
-	jsonData, err := json.MarshalIndent(playlistItems, "", " ")
+	jsonData, err := json.MarshalIndent(boycottItems, "", " ")
 	if err != nil {
 		return nil, err
 	}
 
-	err = os.WriteFile(fmt.Sprintf("%s.json", jsonName), jsonData, 0644)
+	err = os.WriteFile(fmt.Sprintf("data/%s.json", jsonName), jsonData, 0644)
 	if err != nil {
 		return nil, err
 	}
 
-	return playlistItems, nil
+	return boycottItems, nil
+}
+
+func GetOfficialPlaylistItems(client *http.Client, playlistID string, jsonName string) (map[string][]string, error) {
+	officialItems := make(map[string][]string)
+
+	service, err := youtube.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	nextPageToken := ""
+	for {
+		call := service.PlaylistItems.List([]string{"snippet"}).
+			PlaylistId(playlistID).
+			MaxResults(50).
+			PageToken(nextPageToken)
+
+		response, err := call.Do()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, item := range response.Items {
+			videoTitle := item.Snippet.Title
+			videoID := item.Snippet.ResourceId.VideoId
+			if _, exists := officialItems[videoTitle]; !exists {
+				officialItems[videoTitle] = []string{videoID}
+			} else {
+				officialItems[videoTitle] = append(officialItems[videoTitle], videoID)
+			}
+		}
+
+		nextPageToken = response.NextPageToken
+		if nextPageToken == "" {
+			break
+		}
+	}
+
+	jsonData, err := json.MarshalIndent(officialItems, "", " ")
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.WriteFile(fmt.Sprintf("data/%s.json", jsonName), jsonData, 0644)
+	if err != nil {
+		return nil, err
+	}
+
+	return officialItems, nil
 }

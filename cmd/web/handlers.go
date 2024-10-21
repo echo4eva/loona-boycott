@@ -162,7 +162,7 @@ func (app *application) me(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"display_name": displayName})
 }
 
-func (app *application) getConversionMap(w http.ResponseWriter, r *http.Request) {
+func (app *application) getSpotifyConversionMap(w http.ResponseWriter, r *http.Request) {
 	songItems, err := loadJSONtoMap("data/sp_song_items.json")
 	if err != nil {
 		http.Error(w, "Failed to load episodeItems from JSON: "+err.Error(), http.StatusInternalServerError)
@@ -324,23 +324,26 @@ func (app *application) youtubeTest(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, thing)
 }
 
-func (app *application) youtubeTest2(w http.ResponseWriter, r *http.Request) {
+func (app *application) youtubeUpdateJSONItems(w http.ResponseWriter, r *http.Request) {
 	client, err := app.getAuthenticatedYoutubeClient(r)
 	if err != nil {
 		http.Error(w, "Failed to get authenticated client: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// weird4 PLXDnivaxCZoQ9p4tkW0LV0pP47-F2JwAB
-	// boycott PLXDnivaxCZoTC_tcbuj0gRU5O_0NRhiHg
-	name := "yt_playlist_boycott_items"
-	thing, err := youtube.GetPlaylistItems(client, "PLXDnivaxCZoTC_tcbuj0gRU5O_0NRhiHg", name)
+	boycott_playlist_id := "PLXDnivaxCZoTC_tcbuj0gRU5O_0NRhiHg"
+	_, err = youtube.GetBoycottPlaylistItems(client, boycott_playlist_id, "yt_playlist_boycott_items")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Fprint(w, thing)
+	official_playlist_id := "PLXDnivaxCZoSa2IGSoslLeJUK6M7pSAC5"
+	_, err = youtube.GetOfficialPlaylistItems(client, official_playlist_id, "yt_playlist_official_items")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (app *application) youtubeReplacePost(w http.ResponseWriter, r *http.Request) {
