@@ -4,6 +4,7 @@ import (
 	"echo4eva/loona/internal/spotify"
 	"echo4eva/loona/internal/youtube"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,11 +17,26 @@ type playlistReplaceForm struct {
 	FieldError string `form:"-"`
 }
 
-func (app *application) helloWorld(w http.ResponseWriter, r *http.Request) {
+func (app *application) homePage(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.SpotifyForm = playlistReplaceForm{}
 	data.YoutubeForm = playlistReplaceForm{}
 	app.render(w, r, http.StatusOK, "home.html", data)
+}
+
+func (app *application) privacyPage(w http.ResponseWriter, r *http.Request) {
+	ts, ok := app.templateCache["privacy.html"]
+	if !ok {
+		err := errors.New("the template does not exist")
+		app.serverError(w, r, err)
+		return
+	}
+
+	err := ts.ExecuteTemplate(w, "base", nil)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 }
 
 func (app *application) spotifyLogin(w http.ResponseWriter, r *http.Request) {
